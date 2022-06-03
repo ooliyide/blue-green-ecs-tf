@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Get all data from test
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: "get_test_data_by_moduleId.get_test_data"
+      Role: !GetAtt testGetAllDataLambdaRole.Arn
+      Code:
+        S3Bucket: "s3://data-warehouse-git-repo"
+        S3Key: "data-warehouse-git-repo.zip"
+      Runtime: "python3.8"
+      Timeout: 5
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: "test-moduleId-mapping-testing"
+          test_ROOT_URL: "https://vault-uatx.test.io/api/1.0" # replace this with a parameter
+          ENVIRONMENT: "production" # Replace this with a parameter
+          BUCKET_NAME: "vault-data-warehouse"
+          BUCKET_RAW_SUBFOLDER_NAME: "data/test/raw"
+          DEFAULT_MODIFIED: "2019-01-01T00:00:00.000Z"
+          SSM_USERNAME_KEY: "/test/api/username"
+          SSM_PASSWORD_KEY: "/test/api/password"
+          GRANT_TYPE: "password"
+          EXECUTION_TIMEOUT: 720
+
+  testGetAllDataLambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: testGlueJobPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:ListBucket"
+                  - "s3:DeleteObject"
+                  - "ssm:Describe*"
+                  - "ssm:Get*"
+                  - "ssm:List*"
+                  - "logs:CreateLogGroup"
+                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSLambdaFullAccess
+      Path: "/"
