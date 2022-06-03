@@ -3,7 +3,7 @@ Resources:
   LambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
-      Handler: index.handler
+      Handler: index3.handler
       Role: !GetAtt IAMRole.Arn
       Code:
         S3Bucket: apilambdadb
